@@ -1,0 +1,355 @@
+---
+title: "HMC and RStan Replication"
+subtitle: "STAT 482 -- Bayesian Statistics | Spring 2026"
+author: "Yudha & Hussain"
+institute: "Department of Mathematics and Statistics | Qatar University"
+date: "Spring 2026"
+
+format: 
+  beamer:
+    aspectratio: 169
+    fontsize: 11pt
+    theme: Madrid
+    slide-level: 2
+    keep-tex: false
+    include-in-header:
+      text: |
+        % ---- QU Colours ----------------------------------------------------------
+        \definecolor{qumaroon}{RGB}{134,38,51}
+        \definecolor{qugold}{RGB}{191,156,85}
+        \definecolor{qulightgold}{RGB}{250,244,225}
+        \definecolor{stanblue}{RGB}{30,100,180}
+
+        \setbeamercolor{palette primary}    {bg=qumaroon,           fg=white}
+        \setbeamercolor{palette secondary}  {bg=qumaroon!85!black,  fg=white}
+        \setbeamercolor{palette tertiary}   {bg=qugold,             fg=white}
+        \setbeamercolor{palette quaternary} {bg=qumaroon!90!black,  fg=white}
+        \setbeamercolor{structure}          {fg=qumaroon}
+        \setbeamercolor{frametitle}         {bg=qumaroon,           fg=white}
+        \setbeamercolor{title}              {bg=qumaroon,           fg=white}
+        \setbeamercolor{block title}        {bg=qumaroon!80!black,  fg=white}
+        \setbeamercolor{block body}         {bg=qumaroon!6}
+        \setbeamercolor{block title alerted}{bg=qugold!85!black,    fg=white}
+        \setbeamercolor{block body alerted} {bg=qulightgold}
+        \setbeamercolor{block title example}{bg=stanblue!75,        fg=white}
+        \setbeamercolor{block body example} {bg=stanblue!8}
+        \setbeamercolor{item}               {fg=qumaroon}
+        \setbeamercolor{subitem}            {fg=qugold!80!black}
+        \setbeamercolor{footline}           {bg=qumaroon!90!black,  fg=white}
+
+        % ---- Fonts ---------------------------------------------------------------
+        \setbeamerfont{title}      {size=\large,     series=\bfseries}
+        \setbeamerfont{frametitle} {size=\normalsize,series=\bfseries}
+        \setbeamerfont{block title}{size=\small,     series=\bfseries}
+
+        % ---- Itemize / enumerate style -------------------------------------------
+        \setbeamertemplate{itemize item}   {\color{qumaroon}$\blacktriangleright$}
+        \setbeamertemplate{itemize subitem}{\color{qugold}$\bullet$}
+        \setbeamertemplate{enumerate item}
+          {\textcolor{qumaroon}{\bfseries\insertenumlabel.}}
+        \setbeamertemplate{navigation symbols}{}
+
+        % ---- Custom footer -------------------------------------------------------
+        \setbeamertemplate{footline}{%
+          \leavevmode
+          \begin{beamercolorbox}[wd=0.34\paperwidth,ht=4ex,dp=1.2ex,
+                                 leftskip=4pt]{footline}%
+            \small STAT 482 -- Bayesian Statistics
+          \end{beamercolorbox}%
+          \begin{beamercolorbox}[wd=0.40\paperwidth,ht=4ex,dp=1.2ex,
+                                 center]{footline}%
+            \small\insertshortauthor
+          \end{beamercolorbox}%
+          \begin{beamercolorbox}[wd=0.26\paperwidth,ht=4ex,dp=1.2ex,
+                                 rightskip=4pt,right]{footline}%
+            \small\insertframenumber\,/\,\inserttotalframenumber
+          \end{beamercolorbox}%
+          \vskip0pt
+        }
+
+        % ---- R / Stan listing style ----------------------------------------------
+        \usepackage{listings}
+        \lstset{
+          language=R,
+          basicstyle=\ttfamily\tiny,
+          keywordstyle=\color{stanblue}\bfseries,
+          commentstyle=\color{green!50!black}\itshape,
+          stringstyle=\color{red!60!black},
+          breaklines=true,
+          backgroundcolor=\color{gray!7},
+          showstringspaces=false,
+          tabsize=2,
+          frame=none,
+          morekeywords={stan,sampling,extract,library,rstan,ggmcmc,hdi,HDInterval}
+        }
+---
+
+## Presentation Roadmap
+
+::::: {.columns}
+:::: {.column width="52%"}
+
+### Paper in One Sentence
+[TODO: Summarise the paper's contribution in one sentence for a non-specialist audience.]
+
+**This presentation covers:**
+
+1. Problem and motivation
+2. The Bayesian model
+3. Computational method
+4. Key findings
+5. My R/RStan replication
+6. Lessons learned
+
+::::
+:::: {.column width="44%"}
+
+### Paper at a Glance
+- **Authors:** [TODO]
+- **Journal:** [TODO]
+- **Year:** [TODO]
+- **Method:** [TODO: e.g. RStan + HMC]
+- **Domain:** [TODO: e.g. Clinical / Ecology / Economics]
+- **Key tool:** R / RStan
+
+::::
+:::::
+
+## Step 1 -- Problem and Motivation
+
+### The Research Question
+[TODO: State the research question in one or two sentences. What problem does the paper solve? Who cares about the answer?]
+
+::::: {.columns}
+:::: {.column width="48%"}
+
+**Data and Setting:**
+
+- [TODO: dataset description]
+- [TODO: sample size, outcomes measured]
+- [TODO: study design -- RCT, observational, etc.]
+
+::::
+:::: {.column width="48%"}
+
+**Why Bayesian?**
+
+- [TODO: reason 1]
+- [TODO: reason 2]
+- [TODO: reason 3]
+
+::::
+:::::
+
+### Where classical methods fall short
+[TODO: 1--2 sentences on why a frequentist approach is insufficient or less informative for this specific problem.]
+
+## Step 2 -- The Bayesian Model
+
+### Likelihood
+$$[TODO:\quad p(\mathbf{y}\mid\boldsymbol{\theta}) = \ldots]$$
+
+[TODO: What are $\mathbf{y}$ (observed data) and $\boldsymbol{\theta}$ (parameters) in this paper's context?]
+
+### Prior Distribution(s)
+$$[TODO:\quad\theta_1 \sim \mathcal{N}(\ldots,\ldots) \qquad [TODO:\quad\theta_2 \sim \ldots]$$
+
+*Justification:* [TODO: one sentence on why these priors are appropriate.]
+
+### Posterior -- Bayes' Theorem
+$$\pi(\boldsymbol{\theta}\mid\mathbf{y}) \;\propto\; \underbrace{p(\mathbf{y}\mid\boldsymbol{\theta})}_{\text{likelihood}} \;\times\; \underbrace{\pi(\boldsymbol{\theta})}_{\text{prior}}$$
+
+[TODO: What does this posterior represent in context?]
+
+## Step 2 (continued) -- Model Structure
+
+::::: {.columns}
+:::: {.column width="50%"}
+
+**[TODO: Name of model component / level]**
+
+:::: {.block style="background: blue!20"}
+**Level 1 -- [TODO: label]**
+
+$$[TODO:\;\hat{\theta}_k \mid \theta_k \sim \mathcal{N}(\theta_k,\,\sigma_k^2)]$$
+::::
+
+:::: {.block style="background: blue!20"}
+**Level 2 -- [TODO: label]**
+
+$$[TODO:\;\theta_k \mid \mu,\tau \sim \mathcal{N}(\mu,\,\tau^2)]$$
+::::
+
+:::: {.block style="background: blue!20"}
+**Level 3 -- [TODO: label]**
+
+$$[TODO:\;\mu \sim \ldots,\quad \tau \sim \ldots]$$
+::::
+
+::::
+:::: {.column width="46%"}
+
+### Key Insight
+[TODO: What does this model structure achieve that a simpler model could not? e.g. partial pooling, prior sensitivity, HMC efficiency.]
+
+**Parameter interpretation:**
+
+- $\mu$ = [TODO]
+- $\tau$ = [TODO]
+- [TODO: other parameters]
+
+::::
+:::::
+
+## Step 3 -- Computation and Diagnostics
+
+::::: {.columns}
+:::: {.column width="50%"}
+
+**RStan setup:**
+
+- Algorithm: [TODO: HMC/NUTS or other]
+- Chains: [TODO] | Iterations: [TODO]
+- Warm-up: [TODO]
+- `adapt_delta`: [TODO]
+- Parameterisation: [TODO: centred / non-centred]
+
+**Convergence checks:**
+
+- $\hat{R}$: [TODO: value; threshold < 1.01]
+- ESS: [TODO: adequate?]
+- Divergent transitions: [TODO: any?]
+- Trace plots: [TODO: mixed well?]
+
+::::
+:::: {.column width="46%"}
+
+### Trace Plot -- [TODO: parameter name]
+
+[Insert your trace plot here]
+
+*Good mixing: chains overlap and show no long drifts or stuck regions.*
+
+::::
+:::::
+
+## Step 4 -- Key Findings
+
+### Main Result
+[TODO: State the most important finding with a number. Example: "The posterior mean treatment effect is $-14.2$ min (95% CrI: $-22.1$, $-6.3$), indicating a likely reduction in PACU discharge time."]
+
+::::: {.columns}
+:::: {.column width="50%"}
+
+**Posterior summaries:**
+
+| Parameter | Post. mean | 95% CrI |
+|-----------|-----------|---------|
+| [TODO: name] | val | (lo, hi) |
+| [TODO: name] | val | (lo, hi) |
+| [TODO: name] | val | (lo, hi) |
+
+::::
+:::: {.column width="46%"}
+
+### Posterior Probability Statement
+$$P(\text{[TODO: effect > threshold]} \mid \mathbf{y}) = \text{[TODO]}$$
+
+*In plain language:*
+
+[TODO: interpret this for a non-statistician]
+
+[TODO: One further finding -- robustness, heterogeneity, or comparison to a frequentist estimate.]
+
+::::
+:::::
+
+## Step 5 -- My R / RStan Replication {.fragile}
+
+::::: {.columns}
+:::: {.column width="50%"}
+
+**What I reproduced:**
+
+- [TODO: model name]
+- [TODO: real or simulated data?]
+- [TODO: key result reproduced]
+
+**Stan `model{}` block:**
+
+```stan
+// [TODO: paste your Stan model block]
+// Show the parameters{} and model{} sections
+parameters {
+  real beta1;     // treatment effect
+  real<lower=0> sigma;
+}
+model {
+  beta1 ~ normal(0, 10);  // prior
+  y ~ normal(beta0 + beta1 * x, sigma);
+}
+```
+
+::::
+:::: {.column width="46%"}
+
+### My Key Output
+
+[Insert your main plot or table here]
+
+*e.g. posterior density, forest plot, credible interval plot, shrinkage plot*
+
+**Matches the paper?**
+
+[TODO: Qualitative comparison -- direction, magnitude, and uncertainty.]
+
+::::
+:::::
+
+## Step 6 -- Lessons Learned
+
+::::: {.columns}
+:::: {.column width="58%"}
+
+**Three things I understand better now:**
+
+1. **[TODO: Statistical concept]**
+   - [TODO: What you understand now that you did not before reading the paper -- be specific.]
+
+2. **[TODO: Link to STAT 482]**
+   - [TODO: Connect to a lecture topic -- prior choice, MCMC diagnostics, hierarchical models, ...]
+
+3. **[TODO: Practical takeaway]**
+   - [TODO: One thing you will do differently in your own Bayesian analyses.]
+
+::::
+:::: {.column width="38%"}
+
+### Open Question
+[TODO: One aspect the paper does not address that you think would strengthen or extend the analysis.]
+
+### Connection to This Course
+[TODO: Name the STAT 482 lecture or topic this paper most directly illustrates or extends.]
+
+::::
+:::::
+
+## References and Thank You
+
+### Assigned Paper
+[TODO: Author(s), Journal, Year]
+
+DOI: [TODO: insert DOI]
+
+### R Packages Used in My Replication
+
+- `rstan` -- Bayesian model fitting via Stan
+- `ggmcmc` -- MCMC diagnostic plots
+- `HDInterval` -- Highest density credible intervals
+- [TODO: any additional packages used]
+
+---
+
+**Thank you -- Questions Welcome**
+
+*R/Stan code available upon request.*
