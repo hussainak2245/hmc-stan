@@ -1,0 +1,507 @@
+% =====================================================================
+%  STAT 482 -- Bayesian Statistics, Spring 2026
+%  Beamer Presentation Template for Paper Presentations
+%
+%  INSTRUCTIONS FOR STUDENTS
+%  --------------------------
+%  1. Fill in the four \newcommand lines in the CUSTOMISATION block.
+%  2. Replace every [TODO: ...] placeholder with your own content.
+%  3. Keep each slide to 5-6 bullet points maximum.
+%  4. Do NOT remove [fragile] from the Stan code frame (Slide 8).
+%  5. Compile with pdflatex twice for correct page numbers.
+%  6. Recommended: 8-10 slides for a 15-minute talk.
+%
+%  Compilation: pdflatex (run twice)
+% =====================================================================
+
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{listings}
+
+% ---- QU Colours ----------------------------------------------------------
+\definecolor{qumaroon}{RGB}{134,38,51}
+\definecolor{qugold}{RGB}{191,156,85}
+\definecolor{qulightgold}{RGB}{250,244,225}
+\definecolor{stanblue}{RGB}{30,100,180}
+
+\setbeamercolor{palette primary}    {bg=qumaroon,           fg=white}
+\setbeamercolor{palette secondary}  {bg=qumaroon!85!black,  fg=white}
+\setbeamercolor{palette tertiary}   {bg=qugold,             fg=white}
+\setbeamercolor{palette quaternary} {bg=qumaroon!90!black,  fg=white}
+\setbeamercolor{structure}          {fg=qumaroon}
+\setbeamercolor{frametitle}         {bg=qumaroon,           fg=white}
+\setbeamercolor{title}              {bg=qumaroon,           fg=white}
+\setbeamercolor{block title}        {bg=qumaroon!80!black,  fg=white}
+\setbeamercolor{block body}         {bg=qumaroon!6}
+\setbeamercolor{block title alerted}{bg=qugold!85!black,    fg=white}
+\setbeamercolor{block body alerted} {bg=qulightgold}
+\setbeamercolor{block title example}{bg=stanblue!75,        fg=white}
+\setbeamercolor{block body example} {bg=stanblue!8}
+\setbeamercolor{item}               {fg=qumaroon}
+\setbeamercolor{subitem}            {fg=qugold!80!black}
+\setbeamercolor{footline}           {bg=qumaroon!90!black,  fg=white}
+
+% ---- Fonts ---------------------------------------------------------------
+\setbeamerfont{title}      {size=\large,     series=\bfseries}
+\setbeamerfont{frametitle} {size=\normalsize,series=\bfseries}
+\setbeamerfont{block title}{size=\small,     series=\bfseries}
+
+% ---- Itemize / enumerate style -------------------------------------------
+\setbeamertemplate{itemize item}   {\color{qumaroon}$\blacktriangleright$}
+\setbeamertemplate{itemize subitem}{\color{qugold}$\bullet$}
+\setbeamertemplate{enumerate item}
+  {\textcolor{qumaroon}{\bfseries\insertenumlabel.}}
+\setbeamertemplate{navigation symbols}{}
+
+% ---- Custom footer -------------------------------------------------------
+\setbeamertemplate{footline}{%
+  \leavevmode
+  \begin{beamercolorbox}[wd=0.34\paperwidth,ht=2.2ex,dp=1ex,
+                         leftskip=4pt]{footline}%
+    \small STAT 482 -- Bayesian Statistics
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=0.40\paperwidth,ht=2.2ex,dp=1ex,
+                         center]{footline}%
+    \small\insertshortauthor
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=0.26\paperwidth,ht=2.2ex,dp=1ex,
+                         rightskip=4pt,right]{footline}%
+    \small\insertframenumber\,/\,\inserttotalframenumber
+  \end{beamercolorbox}%
+  \vskip0pt
+}
+
+% ---- R / Stan listing style ----------------------------------------------
+\lstset{
+  language=R,
+  basicstyle=\ttfamily\tiny,
+  keywordstyle=\color{stanblue}\bfseries,
+  commentstyle=\color{green!50!black}\itshape,
+  stringstyle=\color{red!60!black},
+  breaklines=true,
+  backgroundcolor=\color{gray!7},
+  showstringspaces=false,
+  tabsize=2,
+  frame=none,
+  morekeywords={stan,sampling,extract,library,rstan,ggmcmc,hdi,HDInterval}
+}
+
+% =====================================================================
+%  STUDENT CUSTOMISATION -- EDIT THESE FOUR LINES
+% =====================================================================
+\newcommand{\papertitle}{[TODO: Full Paper Title]}
+\newcommand{\paperref}{[TODO: Author(s), Journal, Year]}
+\newcommand{\studentname}{[TODO: Your Full Name]}
+\newcommand{\paperdomain}{[TODO: e.g.\ Clinical / Ecology / Economics]}
+% =====================================================================
+
+\title[\papertitle]{\papertitle}
+\subtitle{STAT 482 -- Bayesian Statistics | Spring 2026}
+\author[\studentname]{%
+  \texorpdfstring{\studentname\vskip4pt\small\paperref}{\studentname}
+}
+\institute{Department of Mathematics and Statistics \\ Qatar University}
+\date{Spring 2026}
+
+% =====================================================================
+\begin{document}
+% =====================================================================
+
+% ------------------------------------------------------------------
+%  SLIDE 1 -- Title
+% ------------------------------------------------------------------
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% ------------------------------------------------------------------
+%  SLIDE 2 -- Roadmap
+% ------------------------------------------------------------------
+\begin{frame}{Presentation Roadmap}
+
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{alertblock}{Paper in One Sentence}
+        \small
+        [TODO: Summarise the paper's contribution in one sentence
+        for a non-specialist audience.]
+      \end{alertblock}
+      \vspace{6pt}
+      \textbf{This presentation covers:}
+      \begin{enumerate}\small
+        \item Problem and motivation
+        \item The Bayesian model
+        \item Computational method
+        \item Key findings
+        \item My R/RStan replication
+        \item Lessons learned
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{Paper at a Glance}
+        \small
+        \textbf{Authors:} [TODO]\\
+        \textbf{Journal:} [TODO]\\
+        \textbf{Year:} [TODO]\\
+        \textbf{Method:} [TODO: e.g.\ RStan + HMC]\\
+        \textbf{Domain:} \paperdomain\\
+        \textbf{Key tool:} R / RStan
+      \end{block}
+    \end{column}
+  \end{columns}
+
+\end{frame}
+
+% ------------------------------------------------------------------
+%  SLIDE 3 -- Problem and Motivation
+% ------------------------------------------------------------------
+\begin{frame}{Step 1 -- Problem and Motivation}
+
+  \begin{block}{The Research Question}
+    \small
+    [TODO: State the research question in one or two sentences.
+    What problem does the paper solve? Who cares about the answer?]
+  \end{block}
+
+  \vspace{5pt}
+
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Data and Setting:}
+      \begin{itemize}\small
+        \item [TODO: dataset description]
+        \item [TODO: sample size, outcomes measured]
+        \item [TODO: study design -- RCT, observational, etc.]
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Why Bayesian?}
+      \begin{itemize}\small
+        \item [TODO: reason 1]
+        \item [TODO: reason 2]
+        \item [TODO: reason 3]
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \vspace{5pt}
+
+  \begin{alertblock}{Where classical methods fall short}
+    \small
+    [TODO: 1--2 sentences on why a frequentist approach is
+    insufficient or less informative for this specific problem.]
+  \end{alertblock}
+
+\end{frame}
+
+% ------------------------------------------------------------------
+%  SLIDE 4 -- The Bayesian Model
+% ------------------------------------------------------------------
+\begin{frame}{Step 2 -- The Bayesian Model}
+
+  \begin{block}{Likelihood}
+    \[
+      [TODO:\quad p(\mathbf{y}\mid\boldsymbol{\theta}) = \ldots]
+    \]
+    \small
+    [TODO: What are $\mathbf{y}$ (observed data) and
+    $\boldsymbol{\theta}$ (parameters) in this paper's context?]
+  \end{block}
+
+  \vspace{3pt}
+
+  \begin{block}{Prior Distribution(s)}
+    \[
+      [TODO:\quad\theta_1 \sim \mathcal{N}(\ldots,\ldots)]
+      \qquad
+      [TODO:\quad\theta_2 \sim \ldots]
+    \]
+    \small
+    \textit{Justification:}
+    [TODO: one sentence on why these priors are appropriate.]
+  \end{block}
+
+  \vspace{3pt}
+
+  \begin{exampleblock}{Posterior -- Bayes' Theorem}
+    \[
+      \pi(\boldsymbol{\theta}\mid\mathbf{y})
+      \;\propto\;
+      \underbrace{p(\mathbf{y}\mid\boldsymbol{\theta})}_{\text{likelihood}}
+      \;\times\;
+      \underbrace{\pi(\boldsymbol{\theta})}_{\text{prior}}
+    \]
+    \small
+    [TODO: What does this posterior represent in context?]
+  \end{exampleblock}
+
+\end{frame}
+
+% ------------------------------------------------------------------
+%  SLIDE 5 -- Model Structure (adapt to your paper)
+% ------------------------------------------------------------------
+\begin{frame}{Step 2 (continued) -- Model Structure}
+
+  %  Adapt this slide to your assigned paper:
+  %  - Hierarchical model  -> keep the three-level structure below.
+  %  - Regression model    -> show the prior sensitivity panel instead.
+  %  - Methods paper (HMC) -> replace with Hamiltonian dynamics sketch.
+
+  \begin{columns}[T]
+    \begin{column}{0.50\textwidth}
+      \textbf{[TODO: Name of model component / level]}
+      \vspace{4pt}
+      \begin{exampleblock}{\small Level 1 -- [TODO: label]}
+        \small
+        $[TODO:\;\hat{\theta}_k \mid \theta_k
+          \sim \mathcal{N}(\theta_k,\,\sigma_k^2)]$
+      \end{exampleblock}
+      \vspace{2pt}
+      \begin{exampleblock}{\small Level 2 -- [TODO: label]}
+        \small
+        $[TODO:\;\theta_k \mid \mu,\tau
+          \sim \mathcal{N}(\mu,\,\tau^2)]$
+      \end{exampleblock}
+      \vspace{2pt}
+      \begin{exampleblock}{\small Level 3 -- [TODO: label]}
+        \small
+        $[TODO:\;\mu \sim \ldots,\quad \tau \sim \ldots]$
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{block}{Key Insight}
+        \small
+        [TODO: What does this model structure achieve that a simpler
+        model could not? e.g.\ partial pooling, prior sensitivity,
+        HMC efficiency.]
+      \end{block}
+      \vspace{5pt}
+      \textbf{Parameter interpretation:}
+      \begin{itemize}\small
+        \item $\mu$ = [TODO]
+        \item $\tau$ = [TODO]
+        \item [TODO: other parameters]
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+\end{frame}
+
+% ------------------------------------------------------------------
+%  SLIDE 6 -- Computation and Diagnostics
+% ------------------------------------------------------------------
+\begin{frame}{Step 3 -- Computation and Diagnostics}
+
+  \begin{columns}[T]
+    \begin{column}{0.50\textwidth}
+      \textbf{RStan setup:}
+      \begin{itemize}\small
+        \item Algorithm: [TODO: HMC/NUTS or other]
+        \item Chains: [TODO] \quad Iterations: [TODO]
+        \item Warm-up: [TODO]
+        \item \texttt{adapt\_delta}: [TODO]
+        \item Parameterisation: [TODO: centred / non-centred]
+      \end{itemize}
+      \vspace{5pt}
+      \textbf{Convergence checks:}
+      \begin{itemize}\small
+        \item $\hat{R}$: [TODO: value; threshold $< 1.01$]
+        \item ESS: [TODO: adequate?]
+        \item Divergent transitions: [TODO: any?]
+        \item Trace plots: [TODO: mixed well?]
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{block}{Trace Plot -- [TODO: parameter name]}
+        \vspace{28pt}
+        \centering\small
+        \textit{[Insert your trace plot here]}\\
+        \tiny
+        Good mixing: chains overlap and\\
+        show no long drifts or stuck regions.
+        \vspace{28pt}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+\end{frame}
+
+% ------------------------------------------------------------------
+%  SLIDE 7 -- Key Findings
+% ------------------------------------------------------------------
+\begin{frame}{Step 4 -- Key Findings}
+
+  \begin{alertblock}{Main Result}
+    \small
+    [TODO: State the most important finding with a number.
+    Example: ``The posterior mean treatment effect is $-14.2$ min
+    (95\% CrI: $-22.1$, $-6.3$), indicating a likely reduction
+    in PACU discharge time.'']
+  \end{alertblock}
+
+  \vspace{5pt}
+
+  \begin{columns}[T]
+    \begin{column}{0.50\textwidth}
+      \textbf{Posterior summaries:}
+      \vspace{3pt}
+      {\small
+      \begin{tabular}{lcc}
+        \toprule
+        Parameter & Post.\ mean & 95\% CrI \tabularnewline
+        \midrule
+        TODO: name & val & (lo,\ hi) \tabularnewline
+        TODO: name & val & (lo,\ hi) \tabularnewline
+        TODO: name & val & (lo,\ hi) \tabularnewline
+        \bottomrule
+      \end{tabular}}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{exampleblock}{Posterior Probability Statement}
+        \small
+        $P(\text{[TODO: effect > threshold]} \mid \mathbf{y}) = $ [TODO]\par
+        \textit{In plain language:}\par
+        [TODO: interpret this for a non-statistician]
+      \end{exampleblock}
+      \vspace{4pt}
+      \small
+      [TODO: One further finding -- robustness, heterogeneity,
+      or comparison to a frequentist estimate.]
+    \end{column}
+  \end{columns}
+
+\end{frame}
+
+% ------------------------------------------------------------------
+%  SLIDE 8 -- Replication   [fragile is REQUIRED for lstlisting]
+% ------------------------------------------------------------------
+\begin{frame}[fragile]{Step 5 -- My R / RStan Replication}
+
+  \begin{columns}[T]
+    \begin{column}{0.50\textwidth}
+      \textbf{What I reproduced:}
+      \begin{itemize}\small
+        \item [TODO: model name]
+        \item [TODO: real or simulated data?]
+        \item [TODO: key result reproduced]
+      \end{itemize}
+
+      \vspace{4pt}
+      \textbf{Stan \texttt{model\{\}} block:}
+\begin{lstlisting}
+// [TODO: paste your Stan model block]
+// Show the parameters{} and model{} sections
+parameters {
+  real beta1;     // treatment effect
+  real<lower=0> sigma;
+}
+model {
+  beta1 ~ normal(0, 10);  // prior
+  y ~ normal(beta0 + beta1 * x, sigma);
+}
+\end{lstlisting}
+    \end{column}
+
+    \begin{column}{0.46\textwidth}
+      \begin{block}{My Key Output}
+        \vspace{28pt}
+        \centering\small
+        \textit{[Insert your main plot or table here]}\\
+        \tiny
+        e.g.\ posterior density, forest plot,\\
+        credible interval plot, shrinkage plot
+        \vspace{28pt}
+      \end{block}
+      \vspace{4pt}
+      \small
+      \textbf{Matches the paper?}\par
+      [TODO: Qualitative comparison -- direction,
+      magnitude, and uncertainty.]
+    \end{column}
+  \end{columns}
+
+\end{frame}
+
+% ------------------------------------------------------------------
+%  SLIDE 9 -- Lessons Learned
+% ------------------------------------------------------------------
+\begin{frame}{Step 6 -- Lessons Learned}
+
+  \begin{columns}[T]
+    \begin{column}{0.58\textwidth}
+      \textbf{Three things I understand better now:}
+      \vspace{5pt}
+      \begin{enumerate}\small
+        \item \textbf{[TODO: Statistical concept]}\\
+              \small
+              [TODO: What you understand now that you did not
+              before reading the paper -- be specific.]
+        \vspace{4pt}
+        \item \textbf{[TODO: Link to STAT 482]}\\
+              \small
+              [TODO: Connect to a lecture topic -- prior choice,
+              MCMC diagnostics, hierarchical models, \ldots]
+        \vspace{4pt}
+        \item \textbf{[TODO: Practical takeaway]}\\
+              \small
+              [TODO: One thing you will do differently
+              in your own Bayesian analyses.]
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.38\textwidth}
+      \begin{alertblock}{Open Question}
+        \small
+        [TODO: One aspect the paper does not address that
+        you think would strengthen or extend the analysis.]
+      \end{alertblock}
+      \vspace{6pt}
+      \begin{exampleblock}{Connection to This Course}
+        \small
+        [TODO: Name the STAT 482 lecture or topic
+        this paper most directly illustrates or extends.]
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+
+\end{frame}
+
+% ------------------------------------------------------------------
+%  SLIDE 10 -- References and Q&A
+% ------------------------------------------------------------------
+\begin{frame}{References and Thank You}
+
+  \begin{block}{Assigned Paper}
+    \small
+    \paperref\\
+    \vspace{3pt}
+    DOI: \texttt{[TODO: insert DOI]}
+  \end{block}
+
+  \vspace{5pt}
+
+  \begin{block}{R Packages Used in My Replication}
+    \small
+    \begin{itemize}
+      \item \texttt{rstan} -- Bayesian model fitting via Stan
+      \item \texttt{ggmcmc} -- MCMC diagnostic plots
+      \item \texttt{HDInterval} -- Highest density credible intervals
+      \item [TODO: any additional packages used]
+    \end{itemize}
+  \end{block}
+
+  \vspace{8pt}
+
+  \begin{center}
+    {\large\bfseries\color{qumaroon} Thank you -- Questions Welcome}\\
+    \small\textit{R/Stan code available upon request.}
+  \end{center}
+
+\end{frame}
+
+% =====================================================================
+\end{document}
