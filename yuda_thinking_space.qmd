@@ -100,3 +100,19 @@ Geometrically, a divergent transition occurs when the step size is too large for
 **What are the stated limitations of Stan identified in the paper? Think about situations in STAT482 where these limitations would matter**
 
 The limitations include: 1) Stan does not support discrete parameters because HMC relies on gradients, and discrete parameters do not have gradients. 2. Stan produces a more diagnositc output than JAGS, like tree depths, step sizes, mass matrix quantities, divergences, etc... and the user is responsible for checking and understanding all of these. This requires familiarity with HMC principles that JAGS user's dont need. 3. Stan is more sensitive to tuning despite NUTS automating most of it. It's sensitive to things like warmup length, starting values, and the target acceptance rate. 4) Stan uses a more complex modelling language than JAGS, which adds friction especially for users already familiar with BUGS syntax.
+
+## Step 5
+
+**When you look at the pairs plot for hierarchical model, what pattern indicates the "funnel" geometry problem? Can you see it in your output?**
+
+![Centered Pairs plot](cpp.png){width=100%}
+![Non-centered Pairs plot](ncppp.png){width=100%}
+
+We can see the funneling shape (pay attention to tau vs z/ tau vs b), in the centered parameterization, you can see the funneling on the left side of the plot, where the variance of the random effects (tau) is small, the parameters are tightly correlated and the posterior geometry is difficult for HMC to explore. In the non-centered parameterization, the funneling shape is much less pronounced, more of an elliptical shape, indicating that the parameters are less correlated and the geometry is easier for HMC to explore.
+
+**After applying NCP, does your trace plot better? How do you define "better" in this context?**
+
+![Centered model trace plot](tpc.png){width=100%}
+![Non-centered model trace plot](tpncp.png){width=100%}
+
+Focusing on tau (if tau is shit, alpha and beta will also be shit) we can see that in the centered model the chains dont seem to overlap very well, it looks sticky and Sluggish, meaning they didnt explore the parameter space efficiently, whereas the non-centered model overlap a little bit more, thats what we use to compare which model is better.
