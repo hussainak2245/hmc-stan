@@ -8,6 +8,7 @@ format:
         toc: true
         toc-depth: 3
 ---
+Based on my deep interrogations with Mr.chatgpt. 
 
 ## GOAL
 -   To build up the understanding leading to Hamiltonian Monte Carlo (HMC).
