@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Notes</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="yuda_thinking_space_files/libs/clipboard/clipboard.min.js"></script>
+<script src="yuda_thinking_space_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="yuda_thinking_space_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="yuda_thinking_space_files/libs/quarto-html/popper.min.js"></script>
+<script src="yuda_thinking_space_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="yuda_thinking_space_files/libs/quarto-html/anchor.min.js"></script>
+<link href="yuda_thinking_space_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="yuda_thinking_space_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="yuda_thinking_space_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="yuda_thinking_space_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="yuda_thinking_space_files/libs/bootstrap/bootstrap-138a6193a3bd40baf1e627da441a4734.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Notes</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="step-1" class="level2">
+<h2 class="anchored" data-anchor-id="step-1">Step 1</h2>
+<p><strong>The paper says JAGS can be “prohibitively slow” for some models. Can you give a concrete example of a model type where this is a real problem in ecological research? Why does model complexity affect sampling speed?</strong></p>
+<p>In ecological research, a common example of a model type that can be prohibitively slow for JAGS is a hierarchical model with a large number of parameters. Occupancy models for example often involve multiple levels of random effects and can include large numbers of parameters to estimate. The way that JAGS works is that it can only move in one of four directions, up down left right, so if it needs to move in a diagonal, it will take many steps to get there. thats in the case of a 2 parameter model, but in a model with many parameters, the number of steps needed to move through the parameter space can grow exponentially. For example, if you have a model with 10 parameters, every iteration of the sample will require 10 steps or 10 parameter updates, and if the model is complex with many parameters, it can take a very long time to converge to the posterior distribution.</p>
+<p><strong>What is random walk behaviour in an MCMC sampler? Use your own words and explain why it leads to high autocorrelation and slow mixing</strong></p>
+<p>Random walk behaviour in an MCMC sampler refers to the way the sampler explores the parameter space. In a random walk, the sampler takes small steps in random directions, which can lead to high autocorrelation because the samples are not independent of each other. This means that the sampler may take a long time to explore the parameter space effectively, leading to slow mixing. Slow mixing occurs when the sampler gets stuck in a particular region of the parameter space and takes a long time to move to other regions, which can result in biased estimates and longer convergence times.</p>
+<p><strong>Look at Figure 1 in the paper. What does the trend suggest about the direction the field is moving? Why do you think adoption of stan was slow in ecology at the time of publication?</strong></p>
+<p>For almost 15 years, BUGS has been the dominant software for Bayesian analysis in ecology, and only recently (relative to the paper’s publication) has there been a shift towards using Stan. Reasons for the slow adoption of stan in ecology are likely due to ecologists being unaware of the existence of stan, or are unsure when it would be preferred over bugs.</p>
+<p><strong>In STAT 482 we use RStan for all our computation. After reading the introduction of this paper, can you explain to classmate why the course uses stan rather than JAGS?</strong></p>
+<p>In STAT482 we use models that are more complex than what JAGS can handle efficiently. We simulate models with multiple parameters, and JAGS can be slow for these types of models due to its random walk behaviour. Stan, on the other hand, uses Hamilton Monte Carlo sampling, which allows it to explore the parameter space more efficiently and can handle more complex models with many parameters.</p>
+</section>
+<section id="step-2" class="level2">
+<h2 class="anchored" data-anchor-id="step-2">Step 2</h2>
+<p><strong>The paper introduces the concept of a ball rolling on a frictionless surface. In this analogy: What does the position of the ball correspond to in the MCMC context? What does the potential energy correspond to? What does the kinetic energy correspond to? Why does the total energy (The Hamilton H) remaining constant help produce good MCMC proposals?</strong></p>
+<p>In the MCMC context, the position of the ball corresponds to the proposed value of the parameters. The potential energy corresponds to the negative log posterior distribution, which represents the landscape of the parameter space. The kinetic energy corresponds to the momentum of the sampler, which helps it move through the parameter space. The total energy remaining constant helps produce good MCMC proposals because it allows the sampler to explore the parameter space more efficiently. By maintaining a constant total energy, the sampler can make larger jumps in the parameter space without getting stuck in local minima, which can lead to faster convergence and better mixing.</p>
+<p><strong>Write the Hamiltonian as a function of position theta and momentum p.&nbsp;What are U and K in terms of the posterior distribution?</strong></p>
+<p><span class="math display">\[
+H(\theta, \mathbf{p}) = U(\theta) + K(\mathbf{p})
+\]</span></p>
+<p>What are <span class="math inline">\(U\)</span> and <span class="math inline">\(K\)</span> in terms of the posterior distribution <span class="math inline">\(\pi(\theta \mid y)\)</span>?</p>
+<p>We define:</p>
+<ul>
+<li><p>The potential energy: <span class="math display">\[
+U(\theta) = -\log \pi(\theta \mid y)
+\]</span></p></li>
+<li><p>The kinetic energy (assuming a Gaussian momentum with mass matrix <span class="math inline">\(M\)</span>): <span class="math display">\[
+K(\mathbf{p}) = \frac{1}{2}\mathbf{p}^\top M^{-1}\mathbf{p}
+\]</span></p></li>
+</ul>
+<p><strong>What is the leapfrog integrator? Why must a numerical approximation be used instead of the exact Hamiltonian path? What two tuning parameters control the leapfrog trajectory?</strong></p>
+<p>The leapfrog integrator is a numerical method used to approximate the Hamiltonian dynamics in HMC. It is used because the exact Hamiltonian path is almost impossible to compute analytically for complex models, so a numerical approximation is necessary to simulate the trajectory of the sampler through the parameter space. The two tuning parameters that control the leapfrog trajectory are the step size and the number of steps. The step size determines how far the sampler moves in each leapfrog step, while the number of steps determine how many leapfrog steps are taken before proposing a new sample. Proper tuning of these parameters is crucial for the efficiency and convergence of the HMC sampler.</p>
+<p><strong>What is the No-U-Turn Sampler (NUTS) and how does it solve the trajectory length problem of static HMC? what does “U-turn” mean geometrically?</strong></p>
+<p>NUTS basically determines the number of leapfrog steps to take by checking for a “U-turn” in the trajectory. A U-turn occurs when the sampler starts to move back towards an already explored region of the parameter space by previous leapfrog steps in the same iteration. Geometrically, this means that the trajectory is reversing direction and moving back towards the starting point, which can lead to inefficient sampling and slow convergence. By detecting U-turns, NUTS can adaptively determine when to stop the leapfrog steps, allowing it to explore the parameter space more efficiently without getting stuck in local minima or taking unnecessarily long trajectories.</p>
+<p><strong>HMC requires the gradient of the log-posterior. What technique does Stan use to compute this gradient automatically? Why is this important for practical usability?</strong></p>
+<p>Stan uses automatic differentiation to compute the gradient of the log-posterior. This technique allows Stan to calculate the gradients (which HMC requires at every step) efficiently and accurately without requiring the user to manually derive and implement the gradient calculations. This is important for practical usability because it simplifies the process of specifying models and allows users to focus on model building rather than on the mathematical details of gradient computation. It also reduces the likelihood of errors in gradient calculations, which can lead to more reliable and efficient sampling.</p>
+</section>
+<section id="step-3" class="level2">
+<h2 class="anchored" data-anchor-id="step-3">Step 3</h2>
+<p><strong>What metric do the authors use to compare Stand and JAGS? Define effective sample size (ESS) precisely: how does it differ from the raw number of MCMC iterations, and why is the ratio ESS / time a better measure for efficiency than raw computation speed?</strong></p>
+<p>The authors use the effective sample size (ESS) per unit of time as a metric to compare Stan and JAGS. Effective sample size (ESS) is a measure of the number of independent samples that are equivalent to the correlated samples obtained from an MCMC sampler. It accounts for the autocorrelation in the MCMC samples, which can reduce the effective number of independent samples. The raw number of MCMC iterations does not account for the correlation between samples, so it can be misleading when comparing the efficiency of different samplers. The ratio ESS / time is a better measure for efficiency because it reflects both the quality of the samples (through ESS) and the computational time required to obtain those samples, providing a more comprehensive assessment of the sampler’s performance. A higher ESS per unit of time indicates that the sampler is producing more independent samples in less time, which is a more meaningful measure of efficiency than just the raw computation speed.</p>
+<p><strong>The paper tests models of varying size and complexity. Name two ecological models used in the benchmark and describe their structure briefly. Why is a hierarchical model a harder case for MCMC than a simple regression?</strong></p>
+<p>Swallows - a state-space survival model fit to mark-recapture data of birds. It estimates both survival and detection probabilities simultaneously, with environmental covariates influencing survival. It has 177 parameters total, 172 of which are latent (random effects). with year and family effects on survival and family effects on detection.<br>
+Wildflower - a binomial generlaized linear mixed model estimating flowering success. It has 1101 parameters, 1072 of which are latent, with crossed random effects, meaning the random effects are not nested but cross eachother (year effects on the intercept, and cross effects on both intercept and slope for a covaritate).<br>
+A hierarchical model is a harder case for MCMC than a simple regression because it involves multiple levels of parameters, including random effects, which can lead to complex posterior distributions with strong correlations between parameters. This can result in slow mixing and convergence issues for MCMC samplers, especially those that rely on random walk behavior like JAGS. In contrast, a simple regression typically has fewer parameters and a simpler posterior distribution, making it easier for MCMC samplers to explore the parameter space efficiently.</p>
+<p><strong>What is non-centered parameterization (NCP)? If a random effect were written as <span class="math inline">\(\alpha_j \sim \mathcal{N}(\mu, \tau^2)\)</span>, how would you re-write this in non-centered form? Why can the centering choice dramatically affect Stan’s efficiency?</strong></p>
+<p>Non-centered parameterization (NCP) is a reparameterization technique used to improve the efficiency of MCMC sampling, particularly in hierarchical models. In a centered parameterization, the random effects are directly modeled as being drawn from a distribution with parameters that depend on the data. In contrast, in a non-centered parameterization, the random effects are expressed in terms of standard normal variables that are then transformed to match the desired distribution. For the random effect <span class="math inline">\(\alpha_j \sim \mathcal{N}(\mu, \tau^2)\)</span>, the non-centered form would be: <span class="math display">\[\alpha_j = \mu + \tau z_j\]</span></p>
+<p>where <span class="math inline">\(z_j \sim \mathcal{N}(0, 1)\)</span> is a standard normal variable. The centering choice can dramatically affect Stan’s efficiency because it can influence the geometry of the posterior distribution. In some cases, a centered parameterization can lead to strong correlations between parameters, which can slow down the convergence of the sampler. On the other hand, a non-centered parameterization can help to reduce these correlations and improve the efficiency of the sampler, especially in cases where the data are sparse or the random effects have a large variance. Choosing the appropriate parameterization can lead to faster convergence and more efficient sampling, while a poor choice can result in slow mixing and inefficient sampling.</p>
+</section>
+<section id="step-4" class="level2">
+<h2 class="anchored" data-anchor-id="step-4">Step 4</h2>
+<p><strong>For simple, small models: what do the results say about the relative efficiency of Stan versus JAGS? Is this surprising?</strong></p>
+<p>The relative efficiency of Stan versus JAGS for the Redkite model (5 parameters) is about 3.54, nowhere near the 63x improvement seen with the larger Logistic model, but still a modest amount. This is not surprising because for simple, small models, the computational overhead of using Stan may not be as significant, and JAGS can still perform reasonably well. However, as model complexity increases, the advantages of Stan’s more efficient sampling methods become more pronounced, leading to much greater efficiency compared to JAGS.</p>
+<p><strong>For larger, more complex models: by approximately how much does Stan outperform JAGS (in terms of ESS/min)? What feature of the model drives the biggest gains?</strong></p>
+<p>For larger models like Wildflower and Logistic, Stan outperforms JAGS by approximately 34x and 63x respectively. The biggest gains are driven by the hierarchical structure of the models, which can lead to strong correlations between parameters and slow mixing in JAGS. Stan’s use of Hamiltonian Monte Carlo and its ability to handle complex posterior geometries allows it to explore the parameter space more efficiently, resulting in much higher effective sample sizes per unit of time compared to JAGS.</p>
+<p><strong>For heirarchical models: the paper finds that NCP is important for Stan but less so for JAGS. Can you explain why HMC is more sensitive to parameterization than Gibbs sampling?</strong></p>
+<p>HMC is more sensitive to parameterization because it relies on gradients of the log posterior and is therefore affected by the geometry of the parameter space. Poor parameterizations, such as those producing funnel-shaped posteriors or strong correlations, create regions of dramatically varying curvature, the geometry in one region of the posterior is so different from another than no single step size can work efficiently everywhere. This often requires smaller step sizes in the leapfrog algorithm to maintain stability and avoid divergent transitions, which can reduce mixing efficiency. In hierarchical models, centered parameterizations can induce strong dependencies between parameters, leading to difficult geometry for HMC. Non-centered parameterizations often improve efficiency by reducing these dependencies. In contrast, Gibbs sampling updates parameters from their full conditional distributions and does not rely on gradient information, making it less sensitive to global geometric issues, although it may still mix slowly under strong dependence.</p>
+<p><strong>The paper also discusses divergent transitions - a diagnostic unique to HMC. What is a divergent transition geometrically? Why does Stan warn about them while JAGS gives no equivalent warning? What should you do when you see divergent transitions in your Stan output?</strong></p>
+<p>Geometrically, a divergent transition occurs when the step size is too large for the local curvature, if the ball is on a steep slope and it takes a step too big, it can “fly off” of the surface entirely into a region of extremely low density. The total energy H explodes to infinity instead of staying constant. In Stan, the leapfrog trajectory tracks the total energy H throughout the path. At the end of each trajectory, Stan compares the proposed H with the inital H, if the difference is very large, Stan flags it as a divergent transition. JAGS, on the other hand, does not use Hamiltonian dynamics and therefore does not have a mechanism to detect such issues. It uses Gibbs sampling which doesnt simulate trajectories across the posterior and therefore has no concept of a leapfrog going unstable or energy exploding. No trajectory to monitor, nothing to flag. This doesn’t mean JAGS is safer, if JAGS encounters a funnel-shaped posterior, it doesn’t diverge, but it also doesn’t tell you that it’s systematically undersampling the neck. The chain just quietly produces biased estimates with no warning at all. The R-hat and trace plots can look perfectly fine. If we see divergent transitions in our Stan output, we could try a couple options including: 1) increasing adapt_delta: increasing the target acceptance rate can help reduce the step size, which may help to avoid divergent transitions. 2) reparameterizing the model: using a non-centered parameterization can help to improve the geometry of the posterior and reduce the likelihood of divergent transitions. 3) reconsider the prior: sometimes divergence arise because a prior is too weak, allowing the posterior to have long tails or extreme curvature. Strengthening the prior can help to regularize the posterior and reduce divergence.</p>
+<p><strong>What are the stated limitations of Stan identified in the paper? Think about situations in STAT482 where these limitations would matter</strong></p>
+<p>The limitations include: 1) Stan does not support discrete parameters because HMC relies on gradients, and discrete parameters do not have gradients. 2. Stan produces a more diagnositc output than JAGS, like tree depths, step sizes, mass matrix quantities, divergences, etc… and the user is responsible for checking and understanding all of these. This requires familiarity with HMC principles that JAGS user’s dont need. 3. Stan is more sensitive to tuning despite NUTS automating most of it. It’s sensitive to things like warmup length, starting values, and the target acceptance rate. 4) Stan uses a more complex modelling language than JAGS, which adds friction especially for users already familiar with BUGS syntax.</p>
+</section>
+<section id="step-5" class="level2">
+<h2 class="anchored" data-anchor-id="step-5">Step 5</h2>
+<p><strong>When you look at the pairs plot for hierarchical model, what pattern indicates the “funnel” geometry problem? Can you see it in your output?</strong></p>
+<p><img src="cpp.png" class="img-fluid" style="width:100.0%" alt="Centered Pairs plot"> <img src="ncppp.png" class="img-fluid" style="width:100.0%" alt="Non-centered Pairs plot"></p>
+<p>We can see the funneling shape (pay attention to tau vs z/ tau vs b), in the centered parameterization, you can see the funneling on the left side of the plot, where the variance of the random effects (tau) is small, the parameters are tightly correlated and the posterior geometry is difficult for HMC to explore. In the non-centered parameterization, the funneling shape is much less pronounced, more of an elliptical shape, indicating that the parameters are less correlated and the geometry is easier for HMC to explore.</p>
+<p><strong>After applying NCP, does your trace plot better? How do you define “better” in this context?</strong></p>
+<p><img src="tpc.png" class="img-fluid" style="width:100.0%" alt="Centered model trace plot"> <img src="tpncp.png" class="img-fluid" style="width:100.0%" alt="Non-centered model trace plot"></p>
+<p>Focusing on tau (if tau is shit, alpha and beta will also be shit) we can see that in the centered model the chains dont seem to overlap very well, it looks sticky and Sluggish, meaning they didnt explore the parameter space efficiently, whereas the non-centered model overlap a little bit more, thats what we use to compare which model is better.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

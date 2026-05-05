@@ -1,0 +1,536 @@
+---
+title: "Hussain's Thinking Space"
+format: 
+    html:
+        theme: sketchy
+        code-fold: true
+        code-summary: "Show/Hide Code"
+        toc: true
+        toc-depth: 3
+---
+
+## GOAL
+-   To build up the understanding leading to Hamiltonian Monte Carlo (HMC).
+-   Develop intuition and understanding of the code behind HMC.
+
+
+
+## What problem are we dealing with?
+
+> "Sampling from a probability distribution"
+
+For example, if we want to have a random sample from a uniform distribution or a normal distribution, we use the following code in R:
+```{r}
+# Sample from a uniform distribution
+set.seed(123)
+(round(runif(5, min = 0, max = 1), 2))
+# Sample from a normal distribution
+(round(rnorm(5, mean = 0, sd = 1), 2))
+```
+
+This is the base task of sampling from a probability distribution. 
+We can use this to estimate the mean, variance, or any other property of the distribution.
+
+The above examples are quite straightforward and simple.
+
+For the uniform distribution, we ask the question: 
+
+"If we pick a random percentile value which is between 0 and 1, what is the corresponding density value?"
+
+So, mathematically, we can write this as:
+$$
+ u \sim \text{Uniform}(0, 1) 
+$$
+where $u$ is a random variable that follows a uniform distribution between 0 and 1.
+
+$$
+ x = F^{-1}(u)
+$$
+where $x$ is the random variable that we want to sample from the distribution, and $F^{-1}$ is the inverse CDF (Cumulative Distribution Function) of the distribution we want to sample from.
+
+For the uniform distribution, the CDF is:
+$$ F(x) = \frac{x - a}{b - a}
+$$
+where $a$ and $b$ are the minimum and maximum values of the uniform distribution, respectively.
+Its inverse CDF is:
+$$ F^{-1}(u) = a + u(b - a)
+$$
+Now this is plug and play — we can just plug in the values of $a$ and $b$ to get samples from the uniform distribution.
+
+For the normal distribution, the CDF is:
+$$ F(x) = \frac{1}{2} \left( 1 + \text{erf} \left( \frac{x - \mu}{\sigma \sqrt{2}} \right) \right)
+$$
+where $\mu$ is the mean and $\sigma$ is the standard deviation of the normal distribution, and $\text{erf}$ is the error function.
+The inverse CDF (also known as the quantile function) for the normal distribution does not have a closed-form expression, and requires numerical methods to compute it. Built-in functions in programming languages (like `qnorm` in R) use numerical approximations to compute the inverse CDF for the normal distribution.
+
+This method of sampling is known as the **Inverse Transform Sampling** method.
+
+## What happens if it is difficult to compute the inverse CDF?
+
+When the inverse CDF is difficult to compute, as in the case of the following distribution:
+$$ 
+f(x) = \frac{1}{Z} \exp(-x^4)
+$$
+where $Z$ is the normalization constant, we cannot use the inverse transform sampling method directly.
+
+The **normalization constant** $Z$ is what turns a function into a probability distribution, essentially making the area under the curve equal to 1. In the above example, the normalization constant $Z$ is given by:
+$$ Z = \int_{-\infty}^{\infty} \exp(-x^4) dx
+$$
+This integral does not have a closed-form solution, which makes it difficult to compute the inverse CDF for this distribution.
+
+Now we understand the problem — we want to sample from a distribution where the inverse CDF is difficult to compute.
+
+This can be solved by an algorithm that is surprisingly simple and intuitive.
+
+Let's say we want to sample from a difficult distribution $f(x)$. We take another distribution $g(x)$ which is easy to sample from, like a normal distribution — this is called the **proposal distribution**.
+
+This proposal distribution should be chosen such that it covers all the regions where the target distribution $f(x)$ has significant probability mass.
+
+This can be done by taking a heavy-tailed distribution as the proposal distribution and scaling it appropriately.
+
+This can be mathematically expressed as:
+$$ f(x) \leq M g(x)
+$$
+for all $x$, where $M$ is a constant that ensures the proposal distribution $g(x)$ is always greater than or equal to the target distribution $f(x)$.
+
+
+Finding $M$ for a simple case with a normal distribution:
+$$f(x) = \text{Norm}(0, 1)$$
+$$g(x) = \text{Unif}(-10, 10)$$
+
+```{r plot, echo = FALSE}
+# plot of f(x) and g(x) for different values of M, with labels and no legends , 0.6 as ylim
+m <- c(2, 4, 6, 8, 10)
+x <- seq(-10, 10, length.out = 1000)
+f_x <- dnorm(x, mean = 0, sd = 1)
+plot(x, f_x, type = "l", col = "blue", lwd = 2, ylim = c(0, 0.6), xlab = "x", ylab = "Density", main = "Finding M for Normal Distribution")
+for (m in m) {
+  g_x <- dunif(x, min = -10, max = 10)
+  lines(x, m * g_x, col = "red", lwd = 2)
+  text(5, m * max(g_x) + 0.05, paste("M =", m), col = "red")
+}
+```
+
+So taking $M = 8$ or $M = 10$ is sufficient to ensure that $g(x)$ is always greater than or equal to $f(x)$ for all $x$.
+
+Mathematically, we can find the value of $M$ for this case by taking the maximum value of the ratio of $f(x)$ to $g(x)$.
+
+-   $g(x)$ has the same value for all $x$ in the range of $-10$ to $10$, which is $\frac{1}{20}$.
+-   $f(x)$ is the normal distribution with mean 0 and standard deviation 1, which has its maximum value at $x = 0$, which is $\frac{1}{\sqrt{2\pi}} \approx 0.3989$.
+-   So the ratio of $f(x)$ to $g(x)$ at $x = 0$ is:
+
+$$
+\frac{\frac{1}{\sqrt{2\pi}}}{\frac{1}{20}} \approx 7.98
+$$
+
+So choosing $M \ge 8$ is sufficient.
+
+
+Now we set things up. The intuition is to accept or reject a sample based on how close it is to the target distribution, which is mathematically expressed as:
+$$u \leq \frac{f(x)}{M g(x)}
+$$
+
+-   Here $u$ acts as a random threshold, and the right-hand side is the acceptance probability.
+-   $f(x)$ is going to be the unnormalized version of the target distribution, and $g(x)$ is the proposal distribution scaled by the factor $M$.
+-   If the sample is close to the target distribution, then the ratio $\frac{f(x)}{M g(x)}$ will be high — meaning $u$ is more likely to be less than or equal to the acceptance probability, and we will accept the sample.
+-   If the sample is far from the target distribution, then the ratio $\frac{f(x)}{M g(x)}$ will be low — meaning $u$ is less likely to be less than or equal to the acceptance probability, and we will reject the sample.
+
+**Illustration of the acceptance-rejection step:**
+
+Let's take $g(x)$ from $\text{Unif}(-10, 10)$ as the proposal distribution.
+
+For $f(x)$, we can use the unnormalized version of the target distribution:
+$$
+\exp\left(-\frac{x^2}{2}\right)
+$$
+
+which goes into the right side of the acceptance-rejection step:
+
+$$
+\frac{f(x)}{M g(x)} = \frac{\exp(-\frac{x^2}{2})}{M \cdot \frac{1}{20}} = \frac{20}{M} \exp\left(-\frac{x^2}{2}\right)
+$$
+
+If $M = 20$, then the acceptance probability inequality becomes:
+$$u \leq \exp\left(-\frac{x^2}{2}\right)$$
+
+The code and visualization below illustrate the acceptance-rejection step for this case:
+```{r acceptance-rejection, warning = FALSE, message = FALSE}
+library(plotly)
+set.seed(123)
+# Define the target distribution (unnormalized)
+f <- function(x) {exp(-x^2 / 2)}
+# Define the proposal distribution (uniform)
+g <- function(x) {ifelse(x >= -10 & x <= 10, 1/20, 0)}
+# Define the scaling factor M
+M <- 20
+
+# Generate samples from the proposal distribution
+proposal_samples <- runif(1000, min = -10, max = 10)
+
+accepted_samples <- c()
+acceptance_probas <- c()
+
+for (x in proposal_samples) {
+  u <- runif(1)
+  # Calculate acceptance probability
+  acceptance_proba <- f(x) / (M * g(x)) 
+  acceptance_probas <- c(acceptance_probas, acceptance_proba)
+  if (u <= acceptance_proba) {
+    # Accept the sample
+    accepted_samples <- c(accepted_samples, x) 
+    }
+}
+```
+```{r plot-accepted, echo = FALSE, warning = FALSE, message = FALSE}
+# Create a data frame for plotting
+df <- data.frame(
+  proposal_samples = proposal_samples,
+  acceptance_probabilities = acceptance_probas,
+  accepted = proposal_samples %in% accepted_samples
+)
+# Plot the acceptance-rejection sampling process
+p <- plot_ly(df, x = ~proposal_samples, y = ~acceptance_probabilities, type = 'scatter', mode = 'markers',
+             color = ~accepted, colors = c('red', 'green'), marker = list(size = 10)) %>%
+  layout(title = "Acceptance-Rejection Sampling",
+         xaxis = list(title = "Proposal Samples"),
+         yaxis = list(title = "Acceptance Probability"))
+p
+
+# histogram
+p_hist <- plot_ly(x = accepted_samples, type = 'histogram', nbinsx = 30, name = "Accepted Samples") %>%
+  layout(title = "Histogram of Accepted Samples",
+         xaxis = list(title = "Sample Values"),
+         yaxis = list(title = "Frequency"))
+p_hist
+```
+
+
+
+This is the basic idea of the acceptance-rejection method. This technique of using random samples to estimate the properties of a distribution is known as the **Monte Carlo method**.
+
+
+:::{.callout-note}
+## Historical context:
+The history of the Monte Carlo method is quite interesting — it was developed during World War II by scientists working on the Manhattan Project, and it was named after the Monte Carlo Casino in Monaco, which is known for its gambling and games of chance.
+:::
+The conditions and restrictions of this method are:
+
+-   The scaling factor $M$ must be chosen carefully, as the algorithm is sensitive to this choice. If $M$ is too small, the acceptance probability will be low and most samples will be rejected.
+-   If the distribution is high-dimensional, it can be difficult to find a suitable proposal distribution.
+
+
+## What if we don't want to waste a lot of samples by rejecting them?
+
+In the acceptance-rejection method, we are limited by the choice of the proposal distribution and the scaling factor $M$. Also, a lot of samples are rejected, which can be inefficient, especially in high-dimensional spaces.
+
+The goal is to find an efficient way to sample from a high-dimensional distribution where the acceptance-rejection method is not practical.
+
+This leads us to the idea of choosing the next sample based on the current sample through a Markov chain, where rejection informs the next move rather than simply discarding work.
+
+A Markov chain is a system where a series of possible events are linked together such that the probability of each event depends only on the state attained in the previous event.
+
+For the sampling problem, the state is the current sample, and the next state is the next sample we want to generate.
+
+So the inequality can be expressed as:
+$$
+u \leq \frac{f(x_{\text{new}})}{f(x_{\text{current}})}
+$$
+
+where $x_{\text{new}}$ is the proposed new sample and $x_{\text{current}}$ is the current sample.
+
+The algorithm is as follows:
+
+1. Start with an initial sample $x_{\text{current}}$.
+2. Generate a new sample $x_{\text{new}}$ from a proposal distribution.
+3. Calculate the acceptance probability:
+$$\alpha = \min\left(1, \frac{f(x_{\text{new}})}{f(x_{\text{current}})}\right)$$
+4. Generate a random number $u$ from a uniform distribution between 0 and 1.
+5. If $u \leq \alpha$, accept the new sample and set $x_{\text{current}} = x_{\text{new}}$; otherwise, reject the new sample and keep $x_{\text{current}}$ unchanged.
+6. Repeat steps 2–5 for a large number of iterations to generate a sequence of samples that approximate the target distribution.
+
+Why $\min\left(1, \frac{f(x_{\text{new}})}{f(x_{\text{current}})}\right)$?
+
+-   If $\frac{f(x_{\text{new}})}{f(x_{\text{current}})} > 1$, the new sample is in a region of higher probability, so we always accept it — hence the acceptance probability is capped at 1.
+-   If $\frac{f(x_{\text{new}})}{f(x_{\text{current}})} \leq 1$, the new sample is in a region of lower probability, so we accept it with probability $\frac{f(x_{\text{new}})}{f(x_{\text{current}})}$.
+
+The code and visualization below illustrate the Metropolis-Hastings algorithm for sampling from a normal distribution:
+```{r metropolis-hastings, warning = FALSE, message = FALSE}
+set.seed(123)
+# Define the target distribution (unnormalized)
+f <- function(x) {exp(-x^2 / 2)}
+# Define the proposal distribution (normal)
+g <- function(x) {rnorm(1, mean = x, sd = 1)}
+# Number of iterations
+n_iter <- 1000
+# Initialize the chain
+chain <- numeric(n_iter)
+chain[1] <- 0 # Starting point
+for (i in 2:n_iter) {
+  x_current <- chain[i - 1]
+  x_new <- g(x_current)
+  acceptance_proba <- min(1, f(x_new) / f(x_current))
+  if (runif(1) <= acceptance_proba) {
+    chain[i] <- x_new # Accept the new sample
+  } else {
+    chain[i] <- x_current # Reject the new sample
+  }
+}
+```
+```{r plot-mh, echo = FALSE, warning = FALSE, message = FALSE}
+# Plotly based, similar to prev one
+p <- plot_ly(x = chain, type = 'histogram', nbinsx = 30, name = "Metropolis-Hastings Samples") %>%
+  layout(title = "Metropolis-Hastings Sampling",
+         xaxis = list(title = "Sample Values"),
+         yaxis = list(title = "Frequency"))
+p
+```
+
+```{r effectiveness_accept_reject_vs_mh, echo = FALSE, warning = FALSE, message = FALSE}
+# number of samples accepted in acceptance-rejection method vs Metropolis-Hastings method
+acceptance_rejection_accepted <- length(accepted_samples)
+mh_accepted <- length(unique(chain))
+cat("Number of samples accepted in Acceptance-Rejection method:\n", acceptance_rejection_accepted, "\n")
+cat("Number of samples accepted in Metropolis-Hastings method:\n", mh_accepted, "\n")
+```
+
+
+:::{.callout-note}
+## Historical context:
+Historically, the Metropolis-Hastings algorithm was developed in the 1950s by Nicholas Metropolis and his colleagues at Los Alamos National Laboratory. It was later generalized by W. K. Hastings in 1970, which is why it is often referred to as the Metropolis-Hastings algorithm. This algorithm has become a fundamental tool in computational statistics and is widely used for sampling from complex probability distributions.
+:::
+
+
+Limitations of the Metropolis-Hastings algorithm include:
+
+-   Slow convergence in high-dimensional spaces.
+-   Difficulty in choosing an appropriate proposal distribution, which can lead to low acceptance rates and inefficient sampling.
+-   Better than the acceptance-rejection method, but still can be inefficient for complex distributions.
+
+
+## How does this all connect to Bayesian inference?
+
+-   Bayesian inference is all about updating our belief on a parameter based on observed data.
+-  We know something about a parameter $\theta$ before seeing the data, which is represented by the prior distribution $P(\theta)$.
+-  We observe some data $D$, and we want to update our belief about $\theta$ based on this data, which is represented by the likelihood $P(D | \theta)$.
+-   The likelihood measures how well the parameter $\theta$ explains the observed data $D$. The higher the likelihood, the better $\theta$ explains the data.
+-   In other words, how likely does this data $D$ occur given the parameter $\theta$?
+-   The posterior distribution $P(\theta | D)$ represents our updated belief about the parameter $\theta$ after observing the data $D$.
+-   In short, Bayesian inference can be expressed mathematically as:
+$$P(\theta | D) = \frac{P(D | \theta) P(\theta)}{P(D)}$$
+
+-  To get posterior, we update the prior with data(likelihood)
+-  The denominator $P(D)$ is to make the numerator a valid probability distribution, and it is calculated by integrating the numerator over all possible values of $\theta$:
+$$P(D) = \int P(D | \theta) P(\theta) d\theta$$
+-  This integral can be difficult to compute, especially when the parameter space is high-dimensional or when the likelihood function is complex.
+-  So we can use sampling methods like Metropolis-Hastings to approximate the posterior distribution without having to compute the integral directly.
+- Say we are modeling car price using horsepower:
+
+    $$
+    y_i = \beta_0 + \beta_1 x_i + \epsilon_i
+    $$
+
+    where:
+
+    - $y_i$ is the log price of car $i$
+    - $x_i$ is the horsepower of car $i$
+    - $\beta_0$ is the intercept
+    - $\beta_1$ is the effect of horsepower
+    - $\epsilon_i \sim N(0, \sigma^2)$
+
+- In Bayesian linear regression, we treat the unknown parameters as random variables:
+
+$$
+\theta = (\beta_0, \beta_1, \sigma)
+$$
+
+- The likelihood is:
+
+$$
+P(D \mid \theta)
+=
+\prod_{i=1}^{n}
+N(y_i \mid \beta_0 + \beta_1 x_i,\sigma^2)
+$$
+
+- This means that the likelihood of the data given the parameters is the product of the normal densities for each observation, where the mean of each normal density is given by the linear model $\beta_0 + \beta_1 x_i$ and the variance is $\sigma^2$.
+- We also place priors on the parameters, for example:
+
+$$
+\beta_0 \sim N(0,10^2)
+$$
+
+$$
+\beta_1 \sim N(0,10^2)
+$$
+
+$$
+\sigma \sim \text{Exponential}(1)
+$$
+
+- The posterior is:
+
+$$
+P(\theta \mid D)
+=
+\frac{P(D \mid \theta)P(\theta)}{P(D)}
+$$
+
+- The denominator is:
+
+$$
+P(D)
+=
+\int P(D \mid \theta)P(\theta)d\theta
+$$
+
+- In this case, the integral is over all possible values of $\beta_0$, $\beta_1$, and $\sigma$:
+
+    $$
+    P(D)
+    =
+    \int \int \int
+    P(D \mid \beta_0,\beta_1,\sigma)
+    P(\beta_0)P(\beta_1)P(\sigma)
+    \,d\beta_0\,d\beta_1\,d\sigma
+    $$
+
+- This becomes difficult because we are no longer integrating over just one parameter. We are integrating over a whole parameter space.
+
+- For a simple regression model, this may still be manageable with special assumptions. But for more complex regression models with many predictors, interactions, hierarchical effects, or non-normal likelihoods, this integral becomes very difficult to compute directly.
+
+- This is where these sampling becomes useful. Instead of solving the integral exactly, we generate samples from the posterior distribution of $\beta_0$, $\beta_1$, and $\sigma$.
+
+-  So the target distribution is the posterior distribution of the parameters
+
+
+## Is there an even better way to sample from complex distributions, especially in high-dimensional spaces?
+
+This is answered by an interesting concept from physics called **Hamiltonian dynamics**, which in simple terms describes the motion of particles in a potential field.
+
+Some physics:
+
+-   The position of a particle is denoted by $q$.
+-   The momentum of a particle is denoted by $p$. Momentum is simply the description of how fast the particle is moving and in which direction. (Mass times velocity). 
+-   This concept of momentum helps us to model how the sample moves through the space of the distribution, which is crucial for efficient sampling.
+-   The Hamiltonian function $H(q, p)$ represents the total energy of the system, which is the sum of kinetic energy and potential energy. Which in sampling terms, can be thought of as a way to measure how "far" a sample is from the target distribution.
+-   The kinetic energy is typically given by $\frac{p^2}{2m}$, where $m$ is the mass of the particle, and the potential energy is given by $U(q)$, which is a function of the position $q$.
+-   The Hamiltonian function can be expressed as:
+$$H(q, p) = U(q) + K(p)$$
+
+
+The idea is to use the shape (gradient) of the target distribution to guide the sampling process, and the momentum helps to move through the space more efficiently, especially in high-dimensional spaces.
+
+
+Say the target distribution is $p(x)$, we can define the potential energy as:
+$$U(x) = -\log p(x)$$
+This means that the potential energy is high in regions where the probability density is low, and ***low in regions where the probability density is high***. This allows the sampler to be guided towards regions of higher probability, which can lead to more efficient sampling.
+Kinetic energy is defined as:
+$$K(r) = \frac{r^2}{2}$$
+where $r$ ~ $N(0, 1)$ is the momentum variable, which is sampled from a standard normal distribution. This is an artificial nudge that helps the sampler to move through the space more efficiently.
+
+The key component is:
+$$\nabla U(x) = -\nabla \log p(x)$$
+
+If we are in a region of low probability, the gradient will be negative and large in magnitude, which will push the sample towards regions of higher probability and vice versa.
+
+> "Position changes based on momentum, and momentum changes based on the gradient of potential energy"
+
+Say $\epsilon$ is the step size, then the update rules for the position and momentum are:
+$$p_{\text{new}} = p_{\text{current}} - \epsilon \nabla U(x_{\text{current}})$$
+$$x_{\text{new}} = x_{\text{current}} + \epsilon p_{\text{new}}$$
+
+The above rule is simple one, the issue is that it does not preserve the Hamiltonian dynamics, which can lead to inefficient sampling. To address this issue, we can use a more sophisticated update rule called the **leapfrog method**.
+
+The leapfrog method in simple terms updates the position and momentum in a way that preserves the Hamiltonian dynamics, which helps to maintain the efficiency of the sampler.
+
+This leapfrog method can be expressed as:
+$$p_{\text{half}} = p_{\text{current}} - \frac{\epsilon}{2} \nabla U(x_{\text{current}})$$
+$$x_{\text{new}} = x_{\text{current}} + \epsilon p_{\text{half}}$$
+$$p_{\text{new}} = p_{\text{half}} - \frac{\epsilon}{2} \nabla U(x_{\text{new}})$$
+
+**Why it is called leapfrog?**
+
+Frogs jump in a way that they first push off with their legs (momentum update), then they are in the air (position update), and then they land and push off again (momentum update). This is similar to how the leapfrog method updates the position and momentum in a staggered way, which helps to preserve the Hamiltonian dynamics and maintain the efficiency of the sampler.
+
+**Algorithm:**
+
+1. Sample the momentum variable $r$ from a standard normal distribution.
+2. Set the current position $x_{\text{current}}$ to the initial value.
+3. For a specified number of leapfrog steps:
+   a. Update the momentum variable using the gradient of the potential energy:
+   $$p_{\text{half}} = p_{\text{current}} - \frac{\epsilon}{2} \nabla U(x_{\text{current}})$$
+   b. Update the position variable using the updated momentum:
+   $$x_{\text{new}} = x_{\text{current}} + \epsilon p_{\text{half}}$$
+   c. Update the momentum variable again using the gradient of the potential energy at the new position:
+   $$p_{\text{new}} = p_{\text{half}} - \frac{\epsilon}{2} \nabla U(x_{\text{new}})$$
+4. Perform a Metropolis acceptance step to decide whether to accept the new position $x_{\text{new}}$ based on the change in the Hamiltonian:
+$$\alpha = \min\left(1, \exp(-H(x_{\text{new}}, p_{\text{new}}) + H(x_{\text{current}}, p_{\text{current}}))\right)$$
+    -   Here, exponential is used to convert the change in Hamiltonian into an acceptance probability between 0 and 1.
+    -   The negative sign is used because we want to accept moves that decrease the Hamiltonian (i.e., moves that increase the probability density).
+5. If a random number $u$ from a uniform distribution is less than or equal to $\alpha$, accept the new position and set $x_{\text{current}} = x_{\text{new}}$; otherwise, reject the new position and keep $x_{\text{current}}$ unchanged.
+6. Repeat steps 1–5 for a large number of iterations to generate a sequence of samples that approximate the target distribution.
+
+:::callout-note
+## Historical context:
+The Hamiltonian Monte Carlo (HMC) algorithm was developed in the 1980s by physicist Radford Neal, who was inspired by the principles of Hamiltonian dynamics from physics. HMC has since become a powerful tool for sampling from complex probability distributions, particularly in the context of Bayesian inference and machine learning.
+:::
+
+
+But, choosing the step size $\epsilon$ and the number of leapfrog steps is crucial for the performance of HMC. If the step size is too large, the sampler may diverge and fail to explore the target distribution effectively. If the step size is too small, the sampler may take a long time to converge and produce highly correlated samples.
+
+For this reason, there are adaptive versions of HMC, such as the No-U-Turn Sampler (NUTS), which automatically tune the step size and the number of leapfrog steps during sampling to improve efficiency and convergence.
+
+Intuitively, what NUTS is simply doing is that it keeps simulating the Hamiltonian dynamics until it detects that the trajectory is making a U-turn, which indicates that it is starting to retrace its steps and explore the same region of the target distribution. When this happens, NUTS stops the simulation and accepts the current position as a sample from the target distribution. 
+
+This allows NUTS to adaptively choose the number of leapfrog steps based on the geometry of the target distribution, which can lead to more efficient sampling compared to standard HMC.
+
+**Other limitations of HMC:**
+-   HMC can be computationally expensive, especially for high-dimensional distributions, because it requires calculating gradients of the potential energy function.
+-   HMC may struggle with multimodal distributions, where there are multiple peaks in the probability density, as it may have difficulty moving between modes.
+
+
+## Code implementation of HMC in R:
+```{r hmc-code, warning = FALSE, message = FALSE}
+# Define the target distribution (unnormalized)
+f <- function(x) {exp(-x^2 / 2)}
+# Define the potential energy function
+U <- function(x) {-log(f(x))}
+# Define the gradient of the potential energy function
+grad_U <- function(x) {x} # since U(x) = -log(f(x)) = x^2 / 2, the gradient is simply x
+# HMC parameters
+epsilon <- 0.1 # step size
+n_leapfrog <- 10 # number of leapfrog steps
+n_samples <- 1000 # number of samples to generate
+# Initialize the chain
+chain <- numeric(n_samples)
+chain[1] <- 0 # Starting point
+for (i in 2:n_samples) {
+  x_current <- chain[i - 1]
+  # Sample momentum
+  r <- rnorm(1)
+  # Make a copy of the current position and momentum
+  x_new <- x_current
+  r_new <- r
+  # Leapfrog integration
+  for (j in 1:n_leapfrog) {
+    # Update momentum (half step)
+    r_new <- r_new - (epsilon / 2) * grad_U(x_new)
+    # Update position (full step)
+    x_new <- x_new + epsilon * r_new
+    # Update momentum (half step)
+    r_new <- r_new - (epsilon / 2) * grad_U(x_new)
+  }
+  # Calculate the Hamiltonian for the current and new states
+  H_current <- U(x_current) + (r^2 / 2)
+  H_new <- U(x_new) + (r_new^2 / 2)
+  # Metropolis acceptance step
+  alpha <- min(1, exp(-H_new + H_current))
+  if (runif(1) <= alpha) {
+    chain[i] <- x_new # Accept the new sample
+  } else {
+    chain[i] <- x_current # Reject the new sample
+  }
+}
+```
+
+
