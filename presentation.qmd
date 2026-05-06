@@ -90,12 +90,12 @@ format:
 :::: {.column width="52%"}
 
 ### Paper in One Sentence
-[TODO: Summarise the paper's contribution in one sentence for a non-specialist audience.]
+Comparison and benchmarking of Hamiltonian Monte Carlo (HMC) via RStan against JAGS for fitting a Bayesian hierarchical model in Ecological research, demonstrating improved efficiency and inference quality.
 
 **This presentation covers:**
 
 1. Problem and motivation
-2. The Bayesian model
+2. Hamilton Monte Carlo (HMC)
 3. Computational method
 4. Key findings
 5. My R/RStan replication
@@ -105,11 +105,11 @@ format:
 :::: {.column width="44%"}
 
 ### Paper at a Glance
-- **Authors:** [TODO]
-- **Journal:** [TODO]
-- **Year:** [TODO]
-- **Method:** [TODO: e.g. RStan + HMC]
-- **Domain:** [TODO: e.g. Clinical / Ecology / Economics]
+- **Authors:** Monnahan, C.C., Thorson, J.T., & Branch, T.A.
+- **Journal:** not quite sure
+- **Year:** 2017
+- **Method:** Hamilton Monte Carlo / JAGS 
+- **Domain:** Ecology
 - **Key tool:** R / RStan
 
 ::::
@@ -118,50 +118,45 @@ format:
 ## Step 1 -- Problem and Motivation
 
 ### The Research Question
-[TODO: State the research question in one or two sentences. What problem does the paper solve? Who cares about the answer?]
+Why is HMC better than JAGS? Why did it take so long to adopt HMC/Stan in ecological research?
 
 ::::: {.columns}
 :::: {.column width="48%"}
 
 **Data and Setting:**
 
-- [TODO: dataset description]
-- [TODO: sample size, outcomes measured]
-- [TODO: study design -- RCT, observational, etc.]
+- Redkite, Swallows, Wildflower, etc...
+- Model size: 5-1000 parameters
 
 ::::
 :::: {.column width="48%"}
 
 **Why Bayesian?**
 
-- [TODO: reason 1]
-- [TODO: reason 2]
-- [TODO: reason 3]
+- Cheaper, Faster, Easier.
 
 ::::
 :::::
 
 ### Where classical methods fall short
-[TODO: 1--2 sentences on why a frequentist approach is insufficient or less informative for this specific problem.]
+JAGS' method of sampling can struggle with high-dimensional parameter spaces and complex posterior distributions, leading to slow convergence and inefficient sampling.
 
-## Step 2 -- The Bayesian Model
+## Step 2 -- HMC - The "Model"
 
-### Likelihood
-$$[TODO:\quad p(\mathbf{y}\mid\boldsymbol{\theta}) = \ldots]$$
+### The Hamilton H
+$$
+H(\theta, \mathbf{p}) = U(\theta) + K(\mathbf{p})
+$$
 
-[TODO: What are $\mathbf{y}$ (observed data) and $\boldsymbol{\theta}$ (parameters) in this paper's context?]
+### Centered random effects model
+$$\alpha_j \sim \mathcal{N}(\mu, \tau^2)$$
 
-### Prior Distribution(s)
-$$[TODO:\quad\theta_1 \sim \mathcal{N}(\ldots,\ldots) \qquad [TODO:\quad\theta_2 \sim \ldots]$$
 
-*Justification:* [TODO: one sentence on why these priors are appropriate.]
+### Non-centered random effects model
 
-### Posterior -- Bayes' Theorem
-$$\pi(\boldsymbol{\theta}\mid\mathbf{y}) \;\propto\; \underbrace{p(\mathbf{y}\mid\boldsymbol{\theta})}_{\text{likelihood}} \;\times\; \underbrace{\pi(\boldsymbol{\theta})}_{\text{prior}}$$
+$$\alpha_j = \mu + \tau z_j$$
+$$z_j \sim \mathcal{N}(0, 1)$$
 
-[TODO: What does this posterior represent in context?]
-
-## Step 2 (continued) -- Model Structure
 
 ::::: {.columns}
 :::: {.column width="50%"}
@@ -208,25 +203,25 @@ $$[TODO:\;\mu \sim \ldots,\quad \tau \sim \ldots]$$
 
 **RStan setup:**
 
-- Algorithm: [TODO: HMC/NUTS or other]
-- Chains: [TODO] | Iterations: [TODO]
-- Warm-up: [TODO]
-- `adapt_delta`: [TODO]
-- Parameterisation: [TODO: centred / non-centred]
+- Algorithm: HMC
+- Chains: 4 | Iterations: 2000
+- Warm-up: 1000
+- `adapt_delta`: 0.8, 0.85 0.95
+- Parameterisation: Centered, Non-centered
 
 **Convergence checks:**
 
 - $\hat{R}$: [TODO: value; threshold < 1.01]
-- ESS: [TODO: adequate?]
-- Divergent transitions: [TODO: any?]
-- Trace plots: [TODO: mixed well?]
+- ESS: 0.785, 0.717, 0.761, 1.207
+- Divergent transitions: 11 for centered model.
+- Trace plots: Centered model not mixed well, NCP mixed well.
 
 ::::
 :::: {.column width="46%"}
 
 ### Trace Plot -- [TODO: parameter name]
 
-[Insert your trace plot here]
+show in da R
 
 *Good mixing: chains overlap and show no long drifts or stuck regions.*
 
@@ -243,11 +238,12 @@ $$[TODO:\;\mu \sim \ldots,\quad \tau \sim \ldots]$$
 
 **Posterior summaries:**
 
-| Parameter | Post. mean | 95% CrI |
-|-----------|-----------|---------|
-| [TODO: name] | val | (lo, hi) |
-| [TODO: name] | val | (lo, hi) |
-| [TODO: name] | val | (lo, hi) |
+| Model | ESS/t |
+|-----------|-----------|
+| Centered, AD:0.5 | 0.785 |
+| Centered, AD:0.8 | 0.717 | 
+| Centered, AD:0.95 | 0.761 | 
+| Non-centered, AD: 0.8 | 1.207 | 
 
 ::::
 :::: {.column width="46%"}
@@ -311,25 +307,12 @@ model {
 ::::: {.columns}
 :::: {.column width="58%"}
 
-**Three things I understand better now:**
+**Some things I understand better now:**
 
-1. **[TODO: Statistical concept]**
-   - [TODO: What you understand now that you did not before reading the paper -- be specific.]
-
-2. **[TODO: Link to STAT 482]**
-   - [TODO: Connect to a lecture topic -- prior choice, MCMC diagnostics, hierarchical models, ...]
-
-3. **[TODO: Practical takeaway]**
-   - [TODO: One thing you will do differently in your own Bayesian analyses.]
 
 ::::
 :::: {.column width="38%"}
 
-### Open Question
-[TODO: One aspect the paper does not address that you think would strengthen or extend the analysis.]
-
-### Connection to This Course
-[TODO: Name the STAT 482 lecture or topic this paper most directly illustrates or extends.]
 
 ::::
 :::::
